@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDatabase = require('./src/db');
 const authRoutes = require('./src/routes/auth');
+const fundRoutes = require('./src/routes/funds');
 const financeRoutes = require('./src/routes/finance');
 
 const app = express();
@@ -13,6 +14,7 @@ app.use(express.json({ limit: '128kb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'SpendWise API' }));
 app.use('/api/auth', authRoutes);
+app.use('/api', fundRoutes);
 app.use('/api', financeRoutes);
 
 const buildDir = path.join(__dirname, 'client', 'build');
