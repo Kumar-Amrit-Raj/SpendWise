@@ -7,13 +7,114 @@ import Budgets from './Budgets';
 import Recurring from './Recurring';
 import Investments from './Investments';
 
+const sections = [
+  ['overview', 'Overview'],
+  ['transactions', 'Transactions'],
+  ['budgets', 'Budgets'],
+  ['recurring', 'Recurring'],
+  ['investments', 'Investments']
+];
+
 export default function Dashboard({ user, onLogout }) {
-  const [tab,setTab]=useState('overview'); const [month,setMonth]=useState(monthNow()); const [report,setReport]=useState({}); const [refreshKey,setRefreshKey]=useState(0);
-  async function refresh(){ try{setReport(await api(`/reports/monthly?month=${month}`));}catch(e){console.error(e);} }
-  useEffect(()=>{refresh();},[month,refreshKey]);
-  const changed=()=>setRefreshKey(x=>x+1);
-  return <div className="app-shell"><aside><div className="brand"><div className="brand-mark">S</div><div><strong>SpendWise</strong><small>Personal finance</small></div></div><nav>{[['overview','Overview'],['transactions','Transactions'],['budgets','Budgets'],['recurring','Recurring'],['investments','Investments']].map(([id,label])=><button className={tab===id?'active':''} key={id} onClick={()=>setTab(id)}>{label}</button>)}</nav><div className="profile"><strong>{user.name}</strong><small>{user.email}</small><button onClick={onLogout}>Sign out</button></div></aside>
-    <main className="content"><header><div><span className="eyebrow">Dashboard</span><h1>{tab[0].toUpperCase()+tab.slice(1)}</h1></div><input className="month" type="month" value={month} onChange={e=>setMonth(e.target.value)}/></header>
-      {tab==='overview'&&<Overview report={report} month={month}/>} {tab==='transactions'&&<Transactions month={month} refreshKey={refreshKey} onChanged={changed}/>} {tab==='budgets'&&<Budgets month={month} refreshKey={refreshKey} onChanged={changed}/>} {tab==='recurring'&&<Recurring refreshKey={refreshKey} onChanged={changed}/>} {tab==='investments'&&<Investments refreshKey={refreshKey} onChanged={changed}/>} 
-    </main></div>;
+  const [active, setActive] = useState('overview');
+  const [month, setMonth] = useState(monthNow());
+  const [report, setReport] = useState({});
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  async function refresh() {
+    try {
+      setReport(await api(`/reports/monthly?month=${month}`));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+  }, [month, refreshKey]);
+
+  useEffect(() => {
+    const nodes = sections
+      .map(([id]) => document.getElementById(id))
+      .filter(Boolean);
+
+    const observer = new IntersectionObserver(
+      entries => {
+        const visible = entries
+          .filter(entry => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(visible.target.id);
+      },
+      { rootMargin: '-18% 0px -62% 0px', threshold: [0, 0.15, 0.35, 0.6] }
+    );
+
+    nodes.forEach(node => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
+
+  const changed = () => setRefreshKey(x => x + 1);
+
+  function goTo(id) {
+    setActive(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  return (
+    <div className="app-shell">
+      <aside>
+        <div className="brand">
+          <div className="brand-mark">S</div>
+          <div><strong>SpendWise</strong><small>Personal finance</small></div>
+        </div>
+
+        <nav>
+          {sections.map(([id, label]) => (
+            <button className={active === id ? 'active' : ''} key={id} onClick={() => goTo(id)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="profile">
+          <strong>{user.name}</strong>
+          <small>{user.email}</small>
+          <button onClick={onLogout}>Sign out</button>
+        </div>
+      </aside>
+
+      <main className="content">
+        <header className="dashboard-header">
+          <div>
+            <span className="eyebrow">Personal finance dashboard</span>
+            <h1>Welcome back, {user.name?.split(' ')[0] || 'there'}</h1>
+            <p className="muted">Everything in one place — scroll naturally or use the sidebar to jump to a section.</p>
+          </div>
+          <label className="month-picker">
+            <span>Month</span>
+            <input className="month" type="month" value={month} onChange={e => setMonth(e.target.value)} />
+          </label>
+        </header>
+
+        <section id="overview" className="dashboard-section">
+          <Overview report={report} month={month} />
+        </section>
+
+        <section id="transactions" className="dashboard-section section-block">
+          <Transactions month={month} refreshKey={refreshKey} onChanged={changed} />
+        </section>
+
+        <section id="budgets" className="dashboard-section section-block">
+          <Budgets month={month} refreshKey={refreshKey} onChanged={changed} />
+        </section>
+
+        <section id="recurring" className="dashboard-section section-block">
+          <Recurring refreshKey={refreshKey} onChanged={changed} />
+        </section>
+
+        <section id="investments" className="dashboard-section section-block">
+          <Investments refreshKey={refreshKey} onChanged={changed} />
+        </section>
+      </main>
+    </div>
+  );
 }
