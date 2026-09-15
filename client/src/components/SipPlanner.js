@@ -36,39 +36,60 @@ export default function SipPlanner() {
         </div>
       </div>
 
-      <div className="planner-layout">
-        <div className="panel planner-form">
-          <label>
-            Monthly SIP
-            <input type="number" min="0" step="500" value={monthlySip} onChange={e => setMonthlySip(e.target.value)} />
-          </label>
-          <label>
-            Expected annual return (%)
-            <input type="number" min="0" step="0.1" value={annualReturn} onChange={e => setAnnualReturn(e.target.value)} />
-          </label>
-          <label>
-            Investment period (years)
-            <input type="number" min="0" step="1" value={years} onChange={e => setYears(e.target.value)} />
-          </label>
-          <label>
+      <div className="sip-planner-grid">
+        <div className="panel sip-projection-panel">
+          <div className="planner-panel-head">
+            <span className="planner-kicker">SIP projection</span>
+            <h3>Plan your monthly investment</h3>
+          </div>
+
+          <div className="planner-form projection-inputs">
+            <label>
+              Monthly SIP
+              <input type="number" min="0" step="500" value={monthlySip} onChange={e => setMonthlySip(e.target.value)} />
+            </label>
+            <label>
+              Expected annual return (%)
+              <input type="number" min="0" step="0.1" value={annualReturn} onChange={e => setAnnualReturn(e.target.value)} />
+            </label>
+            <label>
+              Investment period (years)
+              <input type="number" min="0" step="1" value={years} onChange={e => setYears(e.target.value)} />
+            </label>
+          </div>
+
+          <div className="projection-results">
+            <article className="planner-metric metric-brand"><span>Projected corpus</span><strong>{INR.format(result.projected)}</strong></article>
+            <article className="planner-metric metric-neutral"><span>Total invested</span><strong>{INR.format(result.invested)}</strong></article>
+            <article className="planner-metric metric-positive"><span>Estimated gain</span><strong>{INR.format(result.gain)}</strong></article>
+          </div>
+        </div>
+
+        <div className="panel goal-planner-panel">
+          <div className="planner-panel-head">
+            <span className="planner-kicker">Goal planner</span>
+            <h3>Work backwards from your target</h3>
+          </div>
+
+          <label className="goal-input">
             Goal amount
             <input type="number" min="0" step="1000" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} />
           </label>
-        </div>
 
-        <div className="planner-results">
-          <article className="planner-metric"><span>Projected corpus</span><strong>{INR.format(result.projected)}</strong></article>
-          <article className="planner-metric"><span>Total invested</span><strong>{INR.format(result.invested)}</strong></article>
-          <article className="planner-metric"><span>Estimated gain</span><strong>{INR.format(result.gain)}</strong></article>
-          <article className="planner-metric"><span>SIP needed for goal</span><strong>{INR.format(result.requiredSip)}<small>/month</small></strong></article>
+          <article className="goal-required-card">
+            <span>SIP needed for goal</span>
+            <strong>{INR.format(result.requiredSip)}<small>/month</small></strong>
+            <p>Based on {annualReturn || 0}% annual return over {years || 0} years.</p>
+          </article>
+
+          <div className={`goal-status ${result.targetGap >= 0 ? 'on-track' : 'behind'}`}>
+            {result.months === 0 ? 'Enter an investment period to calculate your goal.' : result.targetGap >= 0
+              ? `Your current SIP projection is ${INR.format(result.targetGap)} above this goal.`
+              : `Your current SIP projection is ${INR.format(Math.abs(result.targetGap))} short of this goal.`}
+          </div>
         </div>
       </div>
 
-      <div className={`goal-status ${result.targetGap >= 0 ? 'on-track' : 'behind'}`}>
-        {result.months === 0 ? 'Enter an investment period to calculate your goal.' : result.targetGap >= 0
-          ? `At these assumptions, the projection is ${INR.format(result.targetGap)} above your goal.`
-          : `At these assumptions, the projection is ${INR.format(Math.abs(result.targetGap))} short of your goal.`}
-      </div>
       <p className="planner-note">SIP projections are estimates based on a constant assumed return; actual mutual-fund returns can vary.</p>
     </section>
   );
