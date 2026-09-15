@@ -52,13 +52,16 @@ const recurringRuleSchema = new mongoose.Schema({
 
 const investmentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  name: { type: String, required: true, trim: true, maxlength: 120 },
+  name: { type: String, required: true, trim: true, maxlength: 180 },
   schemeCode: { type: String, trim: true, default: '' },
-  monthlySip: { type: Number, min: 0, default: 0 },
   investedAmount: { type: Number, min: 0, default: 0 },
+  investmentDate: { type: Date, default: null },
+  purchaseNav: { type: Number, min: 0, default: 0 },
+  purchaseNavDate: { type: Date, default: null },
+  units: { type: Number, min: 0, default: 0 },
+  monthlySip: { type: Number, min: 0, default: 0 },
   targetAmount: { type: Number, min: 0, default: 0 },
   targetDate: { type: Date, default: null },
-  units: { type: Number, min: 0, default: 0 },
   notes: { type: String, maxlength: 300, default: '' }
 }, { timestamps: true, collection: 'sw_investments' });
 
