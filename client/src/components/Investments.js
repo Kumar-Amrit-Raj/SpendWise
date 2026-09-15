@@ -10,6 +10,14 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
 }
 
+function mfDateToIso(value) {
+  const text = String(value || '').trim();
+  const mfMatch = /^(\d{2})-(\d{2})-(\d{4})$/.exec(text);
+  if (mfMatch) return `${mfMatch[3]}-${mfMatch[2]}-${mfMatch[1]}`;
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  return isoMatch ? text : '';
+}
+
 export default function Investments({ refreshKey, onChanged }) {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -21,6 +29,11 @@ export default function Investments({ refreshKey, onChanged }) {
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const latestNavIso = mfDateToIso(selectedNav?.date);
+  const investmentDateAfterLatest = Boolean(
+    form.investmentDate && latestNavIso && form.investmentDate > latestNavIso
+  );
 
   async function load() {
     const data = await api('/investments');
@@ -93,6 +106,10 @@ export default function Investments({ refreshKey, onChanged }) {
       setError('Enter the invested amount and investment date.');
       return;
     }
+    if (investmentDateAfterLatest) {
+      setError(`This scheme has no NAV on or after that investment date. Its latest available NAV is from ${selectedNav.date}. Choose an earlier date or a currently active scheme.`);
+      return;
+    }
 
     try {
       setSaving(true);
@@ -158,6 +175,7 @@ export default function Investments({ refreshKey, onChanged }) {
                 setQuery(e.target.value);
                 setSelected(null);
                 setSelectedNav(null);
+                setError('');
               }}
               placeholder="Try HDFC, SBI, Axis, ICICI..."
               autoComplete="off"
@@ -196,17 +214,20 @@ export default function Investments({ refreshKey, onChanged }) {
         <div className="form-grid fund-details-grid">
           <label>
             Amount invested
-            <input type="number" min="0.01" step="0.01" value={form.investedAmount} onChange={e => setForm({ ...form, investedAmount: e.target.value })} required />
+            <input type="number" min="0.01" step="0.01" value={form.investedAmount} onChange={e => { setForm({ ...form, investedAmount: e.target.value }); setError(''); }} required />
           </label>
           <label>
             Investment date
-            <input type="date" max={new Date().toISOString().slice(0, 10)} value={form.investmentDate} onChange={e => setForm({ ...form, investmentDate: e.target.value })} required />
+            <input type="date" max={new Date().toISOString().slice(0, 10)} value={form.investmentDate} onChange={e => { setForm({ ...form, investmentDate: e.target.value }); setError(''); }} required />
           </label>
         </div>
 
         <p className="fund-helper">If the selected date was a weekend or market holiday, SpendWise uses the next available NAV published for that scheme.</p>
-        {error && <div className="alert">{error}</div>}
-        <button className="primary" disabled={!selected || saving}>{saving ? 'Calculating portfolio…' : 'Add mutual fund'}</button>
+        {investmentDateAfterLatest && (
+          <div className="alert">This scheme's latest available NAV is from {selectedNav.date}, so it cannot be used for an investment dated {form.investmentDate}. Choose an earlier date or another active scheme.</div>
+        )}
+        {error && !investmentDateAfterLatest && <div className="alert">{error}</div>}
+        <button className="primary" disabled={!selected || saving || investmentDateAfterLatest}>{saving ? 'Calculating portfolio…' : 'Add mutual fund'}</button>
       </form>
 
       <div className="card-grid fund-card-grid">
