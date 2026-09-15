@@ -17,7 +17,17 @@ const transactionSchema = new mongoose.Schema({
   recurringRule: { type: mongoose.Schema.Types.ObjectId, ref: 'RecurringRule', default: null },
   occurrenceKey: { type: String, default: null }
 }, { timestamps: true, collection: 'sw_transactions' });
-transactionSchema.index({ user: 1, recurringRule: 1, occurrenceKey: 1 }, { unique: true, sparse: true });
+transactionSchema.index(
+  { user: 1, recurringRule: 1, occurrenceKey: 1 },
+  {
+    unique: true,
+    name: 'uniq_recurring_occurrence',
+    partialFilterExpression: {
+      recurringRule: { $type: 'objectId' },
+      occurrenceKey: { $type: 'string' }
+    }
+  }
+);
 transactionSchema.index({ user: 1, date: -1, createdAt: -1 });
 
 const budgetSchema = new mongoose.Schema({
