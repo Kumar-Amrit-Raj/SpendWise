@@ -214,16 +214,17 @@ export default function Investments({ refreshKey, onChanged }) {
           const latest = nav[item._id];
           const currentValue = latest?.nav && item.units ? latest.nav * item.units : null;
           const profit = currentValue === null ? null : currentValue - Number(item.investedAmount || 0);
+          const statusClass = profit === null ? 'fund-neutral' : profit >= 0 ? 'fund-gain' : 'fund-loss';
 
           return (
-            <article className="budget-card fund-card" key={item._id}>
+            <article className={`budget-card fund-card ${statusClass}`} key={item._id}>
               <div className="section-head fund-card-head">
                 <div><strong>{item.name}</strong><small>Scheme code {item.schemeCode || '—'}</small></div>
                 <button onClick={() => remove(item._id)} aria-label="Remove mutual fund">×</button>
               </div>
 
               <div className="fund-value-row">
-                <div><span>Current portfolio</span><strong>{currentValue === null ? '—' : INR.format(currentValue)}</strong></div>
+                <div className={profit === null ? '' : profit >= 0 ? 'value-positive' : 'value-negative'}><span>Current portfolio</span><strong>{currentValue === null ? '—' : INR.format(currentValue)}</strong></div>
                 <div><span>Amount invested</span><strong>{INR.format(item.investedAmount || 0)}</strong></div>
               </div>
 
