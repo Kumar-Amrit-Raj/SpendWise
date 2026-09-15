@@ -55,8 +55,18 @@ export default function Dashboard({ user, onLogout }) {
   const changed = () => setRefreshKey(x => x + 1);
 
   function goTo(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+
     setActive(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const nav = document.querySelector('.app-shell > aside');
+    const stickyOffset = window.innerWidth <= 980
+      ? (nav?.getBoundingClientRect().height || 0) + 14
+      : 18;
+    const top = target.getBoundingClientRect().top + window.scrollY - stickyOffset;
+
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }
 
   return (
