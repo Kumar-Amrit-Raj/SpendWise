@@ -5,14 +5,16 @@ import Overview from './Overview';
 import Transactions from './Transactions';
 import Budgets from './Budgets';
 import Recurring from './Recurring';
-import Investments from './Investments';
+import SipPlanner from './SipPlanner';
+import MutualFunds from './Investments';
 
 const sections = [
   ['overview', 'Overview'],
   ['transactions', 'Transactions'],
   ['budgets', 'Budgets'],
   ['recurring', 'Recurring'],
-  ['investments', 'Investments']
+  ['sip-planner', 'SIP Planner'],
+  ['mutual-funds', 'Mutual Funds']
 ];
 
 export default function Dashboard({ user, onLogout }) {
@@ -97,7 +99,7 @@ export default function Dashboard({ user, onLogout }) {
           <div>
             <span className="eyebrow">Personal finance dashboard</span>
             <h1>Welcome back, {user.name?.split(' ')[0] || 'there'}</h1>
-            <p className="muted">Everything in one place — scroll naturally or use the sidebar to jump to a section.</p>
+            <p className="muted">Everything in one place — scroll naturally or use the navigation to jump to a section.</p>
           </div>
           <label className="month-picker">
             <span>Month</span>
@@ -121,8 +123,12 @@ export default function Dashboard({ user, onLogout }) {
           <Recurring refreshKey={refreshKey} onChanged={changed} />
         </section>
 
-        <section id="investments" className="dashboard-section section-block">
-          <Investments refreshKey={refreshKey} onChanged={changed} />
+        <section id="sip-planner" className="dashboard-section section-block">
+          <SipPlanner />
+        </section>
+
+        <section id="mutual-funds" className="dashboard-section section-block">
+          <MutualFunds refreshKey={refreshKey} onChanged={changed} />
         </section>
       </main>
     </div>
