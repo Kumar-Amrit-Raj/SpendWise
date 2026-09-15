@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { INR } from '../constants';
 
-const emptyForm = {
-  investedAmount: '',
-  targetAmount: '',
-  targetDate: '',
-  units: ''
-};
+const emptyForm = { investedAmount: '', investmentDate: '' };
+
+function formatDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
+}
 
 export default function Investments({ refreshKey, onChanged }) {
   const [items, setItems] = useState([]);
@@ -18,10 +19,23 @@ export default function Investments({ refreshKey, onChanged }) {
   const [selectedNav, setSelectedNav] = useState(null);
   const [nav, setNav] = useState({});
   const [searching, setSearching] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   async function load() {
-    setItems(await api('/investments'));
+    const data = await api('/investments');
+    setItems(data);
+
+    const latestEntries = await Promise.all(
+      data.filter(item => item.schemeCode).map(async item => {
+        try {
+          return [item._id, await api(`/investments/nav/${item.schemeCode}`)];
+        } catch (e) {
+          return [item._id, { error: e.message }];
+        }
+      })
+    );
+    setNav(Object.fromEntries(latestEntries));
   }
 
   useEffect(() => {
@@ -75,19 +89,20 @@ export default function Investments({ refreshKey, onChanged }) {
       setError('Select a mutual fund scheme from the suggestions first.');
       return;
     }
+    if (!form.investedAmount || !form.investmentDate) {
+      setError('Enter the invested amount and investment date.');
+      return;
+    }
 
     try {
+      setSaving(true);
       setError('');
       await api('/investments', {
         method: 'POST',
         body: JSON.stringify({
-          name: selected.schemeName,
           schemeCode: String(selected.schemeCode),
-          monthlySip: 0,
           investedAmount: form.investedAmount,
-          targetAmount: form.targetAmount,
-          targetDate: form.targetDate,
-          units: form.units
+          investmentDate: form.investmentDate
         })
       });
       setForm(emptyForm);
@@ -98,6 +113,8 @@ export default function Investments({ refreshKey, onChanged }) {
       onChanged();
     } catch (e) {
       setError(e.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -122,17 +139,12 @@ export default function Investments({ refreshKey, onChanged }) {
     }
   }
 
-  const selectedValue = useMemo(() => {
-    if (!selectedNav?.nav || !form.units) return null;
-    return Number(selectedNav.nav) * Number(form.units);
-  }, [selectedNav, form.units]);
-
   return (
     <section>
       <div className="section-head">
         <div>
           <h2>Mutual Funds</h2>
-          <p className="muted">Search Indian mutual-fund schemes by company or scheme name, then track NAV and goal progress.</p>
+          <p className="muted">Choose a scheme, enter how much you invested and when. SpendWise calculates the units from that date's NAV and tracks today's portfolio value.</p>
         </div>
       </div>
 
@@ -182,28 +194,26 @@ export default function Investments({ refreshKey, onChanged }) {
         )}
 
         <div className="form-grid fund-details-grid">
-          <label>Amount invested<input type="number" min="0" step="0.01" value={form.investedAmount} onChange={e => setForm({ ...form, investedAmount: e.target.value })} /></label>
-          <label>Units owned<input type="number" min="0" step="0.0001" value={form.units} onChange={e => setForm({ ...form, units: e.target.value })} /></label>
-          <label>Goal amount<input type="number" min="0" step="0.01" value={form.targetAmount} onChange={e => setForm({ ...form, targetAmount: e.target.value })} /></label>
-          <label>Goal date<input type="date" value={form.targetDate} onChange={e => setForm({ ...form, targetDate: e.target.value })} /></label>
+          <label>
+            Amount invested
+            <input type="number" min="0.01" step="0.01" value={form.investedAmount} onChange={e => setForm({ ...form, investedAmount: e.target.value })} required />
+          </label>
+          <label>
+            Investment date
+            <input type="date" max={new Date().toISOString().slice(0, 10)} value={form.investmentDate} onChange={e => setForm({ ...form, investmentDate: e.target.value })} required />
+          </label>
         </div>
 
-        {selectedValue !== null && (
-          <div className="live-value-preview">Estimated current value: <strong>{INR.format(selectedValue)}</strong></div>
-        )}
-
+        <p className="fund-helper">If the selected date was a weekend or market holiday, SpendWise uses the next available NAV published for that scheme.</p>
         {error && <div className="alert">{error}</div>}
-        <button className="primary" disabled={!selected}>Add mutual fund</button>
+        <button className="primary" disabled={!selected || saving}>{saving ? 'Calculating portfolio…' : 'Add mutual fund'}</button>
       </form>
 
       <div className="card-grid fund-card-grid">
         {items.map(item => {
           const latest = nav[item._id];
-          const current = latest?.nav && item.units ? latest.nav * item.units : item.investedAmount;
-          const profit = Number(current || 0) - Number(item.investedAmount || 0);
-          const progress = item.targetAmount
-            ? Math.min(100, Math.max(0, Math.round((Number(current || 0) / item.targetAmount) * 100)))
-            : 0;
+          const currentValue = latest?.nav && item.units ? latest.nav * item.units : null;
+          const profit = currentValue === null ? null : currentValue - Number(item.investedAmount || 0);
 
           return (
             <article className="budget-card fund-card" key={item._id}>
@@ -213,21 +223,23 @@ export default function Investments({ refreshKey, onChanged }) {
               </div>
 
               <div className="fund-value-row">
-                <div><span>Current value</span><strong>{INR.format(current || 0)}</strong></div>
-                <div><span>Invested</span><strong>{INR.format(item.investedAmount || 0)}</strong></div>
+                <div><span>Current portfolio</span><strong>{currentValue === null ? '—' : INR.format(currentValue)}</strong></div>
+                <div><span>Amount invested</span><strong>{INR.format(item.investedAmount || 0)}</strong></div>
               </div>
 
-              {latest?.nav && <small>Latest NAV {INR.format(latest.nav)} · {latest.date}</small>}
-              {latest?.error && <small className="fund-error">{latest.error}</small>}
-              <small className={profit >= 0 ? 'fund-positive' : 'fund-negative'}>
-                {profit >= 0 ? 'Gain' : 'Loss'} {INR.format(Math.abs(profit))}
-              </small>
+              <div className="fund-details-list">
+                <small>Invested on <strong>{formatDate(item.investmentDate)}</strong></small>
+                <small>Purchase NAV <strong>{item.purchaseNav ? INR.format(item.purchaseNav) : '—'}</strong>{item.purchaseNavDate ? ` · ${formatDate(item.purchaseNavDate)}` : ''}</small>
+                <small>Units calculated <strong>{item.units ? Number(item.units).toFixed(4) : '—'}</strong></small>
+                {latest?.nav && <small>Latest NAV <strong>{INR.format(latest.nav)}</strong> · {latest.date}</small>}
+                {latest?.error && <small className="fund-error">{latest.error}</small>}
+              </div>
 
-              {item.targetAmount > 0 && (
-                <>
-                  <div className="progress"><i style={{ width: `${progress}%` }} /></div>
-                  <small>{progress}% of {INR.format(item.targetAmount)} goal</small>
-                </>
+              {profit !== null && (
+                <div className={profit >= 0 ? 'fund-return fund-positive' : 'fund-return fund-negative'}>
+                  {profit >= 0 ? 'Gain' : 'Loss'} {INR.format(Math.abs(profit))}
+                  <small>{item.investedAmount > 0 ? `${((profit / item.investedAmount) * 100).toFixed(2)}%` : ''}</small>
+                </div>
               )}
 
               <div className="fund-card-actions">
