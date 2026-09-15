@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { monthNow } from '../constants';
+import '../investments.css';
 import Overview from './Overview';
 import Transactions from './Transactions';
 import Budgets from './Budgets';
