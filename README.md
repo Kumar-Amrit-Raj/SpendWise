@@ -2,6 +2,10 @@
 
 SpendWise is a full-stack personal finance web app where users can manage income, expenses, budgets, recurring payments, SIP planning, and mutual fund investments.
 
+## Live Demo
+
+[View SpendWise Live](https://spendwise-dgq0.onrender.com)
+
 ## Features
 
 - User login and signup
@@ -14,7 +18,7 @@ SpendWise is a full-stack personal finance web app where users can manage income
 - View monthly income, expenses, and savings
 - SIP calculator and goal planner
 - Search mutual fund schemes
-- Calculate units using old NAV data
+- Calculate units using historical NAV data
 - Show latest NAV and current investment value
 - Show profit or loss on mutual funds
 - Responsive design for different screen sizes
