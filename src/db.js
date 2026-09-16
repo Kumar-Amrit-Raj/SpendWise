@@ -38,7 +38,11 @@ async function connectDatabase() {
   if (!uri) throw new Error('MONGO_URI is not configured');
 
   mongoose.set('strictQuery', true);
-  await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000, autoIndex: false });
+  await mongoose.connect(uri, {
+    serverSelectionTimeoutMS: 10000,
+    autoIndex: false,
+    family: 4
+  });
   await repairTransactionIndexes();
   console.log('SpendWise database connected');
 }
