@@ -17,7 +17,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', fundRoutes);
 app.use('/api', financeRoutes);
 
-const buildDir = path.join(__dirname, 'client', 'build');
+const buildDir = path.join(__dirname, '..', 'frontend', 'build');
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(buildDir));
   app.get('*', (req, res, next) => req.path.startsWith('/api/') ? next() : res.sendFile(path.join(buildDir, 'index.html')));

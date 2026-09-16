@@ -1,54 +1,188 @@
 # SpendWise
 
-SpendWise is a full-stack personal finance dashboard for managing day-to-day money, monthly budgets, recurring transactions, spending reports and investment goals.
+SpendWise is a full-stack personal finance web app where users can manage income, expenses, budgets, recurring payments, SIP planning, and mutual fund investments.
 
-## Highlights
+## Features
 
-- Email/password authentication with JWT sessions and password hashing
-- User-scoped income and expense CRUD with search, filtering and CSV export
-- Monthly category budgets with live spent-vs-limit progress
-- Weekly, monthly and yearly recurring transactions with idempotent duplicate protection
-- Monthly income, expense, savings and category analytics
-- Investment/SIP goal tracking with latest mutual-fund NAV lookup through MFapi
-- Responsive React dashboard and REST API
+- User login and signup
+- Add, edit, delete, and search transactions
+- Filter transactions by type and category
+- Export transactions as CSV
+- Set monthly budgets
+- Track how much of the budget is used
+- Add recurring transactions
+- View monthly income, expenses, and savings
+- SIP calculator and goal planner
+- Search mutual fund schemes
+- Calculate units using old NAV data
+- Show latest NAV and current investment value
+- Show profit or loss on mutual funds
+- Responsive design for different screen sizes
 
-## Stack
+## Tech Stack
 
-- **Frontend:** React, JavaScript, HTML5, CSS3
+- **Frontend:** React, JavaScript, HTML, CSS
 - **Backend:** Node.js, Express.js
-- **Database:** MongoDB Atlas with Mongoose
-- **Authentication:** JWT + bcrypt
-- **External data:** MFapi
+- **Database:** MongoDB Atlas
+- **Authentication:** JWT and bcrypt
+- **Mutual Fund Data:** MFapi
 
-## Project structure
+## Project Structure
 
 ```text
 SpendWise/
-├─ server.js
-├─ src/
-│  ├─ auth.js
-│  ├─ db.js
-│  ├─ models.js
-│  └─ routes/
-│     ├─ auth.js
-│     └─ finance.js
-└─ client/
-   ├─ public/index.html
-   └─ src/
-      ├─ App.js
-      ├─ api.js
-      ├─ constants.js
-      ├─ components/
-      ├─ index.js
-      ├─ base.css
-      └─ dashboard.css
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── App.js
+│   │   ├── api.js
+│   │   ├── constants.js
+│   │   └── index.js
+│   ├── package.json
+│   └── package-lock.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   ├── auth.js
+│   │   ├── db.js
+│   │   └── models.js
+│   └── server.js
+│
+├── .env.example
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
 ```
 
-## Run locally
+## Run Locally
 
-1. Copy `.env.example` to `.env` and configure `MONGO_URI` and `AUTH_SECRET`.
-2. Install server dependencies with `npm install`.
-3. Install client dependencies with `npm run client-install`.
-4. Run the API with `npm run server` and the React app with `npm run client`.
+Install the main dependencies:
 
-For production, build the client with `npm run build` and run the server with `NODE_ENV=production npm start`.
+```bash
+npm install
+```
+
+Install frontend dependencies:
+
+```bash
+npm run frontend-install
+```
+
+Start the backend:
+
+```bash
+npm run backend
+```
+
+Start the frontend:
+
+```bash
+npm run frontend
+```
+
+Or run both together:
+
+```bash
+npm run dev
+```
+
+Frontend runs on:
+
+```text
+http://localhost:3000
+```
+
+Backend runs on:
+
+```text
+http://localhost:5000
+```
+
+## Environment Variables
+
+Create a `.env` file in the main project folder.
+
+Example:
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+AUTH_SECRET=your_secret_key
+CLIENT_ORIGIN=http://localhost:3000
+```
+
+Do not upload your real `.env` file to GitHub.
+
+## Production
+
+Build the frontend:
+
+```bash
+npm run build
+```
+
+Then start the app:
+
+```bash
+npm start
+```
+
+For production, set:
+
+```env
+NODE_ENV=production
+```
+
+## Main Sections
+
+### Transactions
+
+Users can:
+- Add income and expenses
+- Edit transactions
+- Delete transactions
+- Search transactions
+- Filter transactions
+- Export transactions to CSV
+
+### Budgets
+
+Users can:
+- Set a monthly budget for a category
+- See how much money has been spent
+- See when the budget is exceeded
+
+### Recurring Transactions
+
+Users can:
+- Add weekly, monthly, or yearly recurring transactions
+- Pause a recurring transaction
+- Delete a recurring transaction
+
+### SIP Planner
+
+Users can:
+- Enter monthly SIP amount
+- Enter expected return
+- Enter investment time
+- See projected value
+- Calculate the SIP needed for a goal
+
+### Mutual Funds
+
+Users can:
+- Search for a mutual fund
+- Enter invested amount
+- Enter investment date
+- Get the NAV from that date
+- Calculate the number of units
+- Get the latest NAV
+- See current investment value
+- See profit or loss
+
+## Purpose
+
+This project was built to practice and demonstrate full-stack web development using React, Node.js, Express, MongoDB, APIs, and authentication.
